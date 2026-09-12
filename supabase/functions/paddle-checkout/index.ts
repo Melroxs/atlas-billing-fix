@@ -201,18 +201,24 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Paddle Retain identification: only a Paddle-issued ctm_ id that exists
+    // in this Paddle environment is ever returned.
+    const paddleCustomerId = await resolvePaddleCustomerId(tenantId);
+
     console.info("[paddle-checkout] transaction created", {
       organization_id: tenantId,
       internal_plan: plan,
       billing_interval: billing,
       transaction_id: transactionId,
       surface: clientToken ? "overlay" : "hosted",
+      retain_customer: paddleCustomerId ? "known" : "none",
       result: "ok",
     });
 
     return jsonResponse({
       transactionId,
       clientToken,
+      paddleCustomerId,
       environment,
       url,
       successUrl,
