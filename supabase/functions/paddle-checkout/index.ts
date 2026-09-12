@@ -20,11 +20,13 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 import {
   CORS_HEADERS,
   createPaddleTransaction,
+  paddleClientConfig,
   jsonResponse,
   errorResponse,
   type BillingInterval,
   type InternalPlan,
 } from "../_shared/paddle.ts";
+
 
 const ATLAS_APP_URL = Deno.env.get("ATLAS_APP_URL") ?? "https://atlas-ai-os.com";
 
@@ -140,19 +142,46 @@ Deno.serve(async (req) => {
       return errorResponse("You do not have access to this organization.", 403);
     }
 
-    const { url } = await createPaddleTransaction(tenantId, plan, billing);
-
     const successUrl = `${ATLAS_APP_URL}/pricing-success?tenantId=${encodeURIComponent(tenantId)}&plan=${encodeURIComponent(plan)}&billing=${encodeURIComponent(billing)}`;
     const cancelUrl = `${ATLAS_APP_URL}/pricing`;
+
+    const { transactionId, url } = await createPaddleTransaction(
+      tenantId,
+      plan,
+      billing,
+      successUrl,
+    );
+
+    // Client-safe overlay config. The browser opens Paddle.js with the
+    // transaction id when a client-side token is configured, and falls back to
+    // the hosted checkout URL otherwise. At least one of the two must exist,
+    // or the customer would reach a dead end.
+    const { clientToken, environment } = paddleClientConfig();
+    if (!clientToken && !url) {
+      console.error("[paddle-checkout] no checkout surface available", {
+        organization_id: tenantId,
+        reason:
+          "PADDLE_CLIENT_TOKEN is unset and Paddle returned no hosted checkout URL (no default payment link configured).",
+      });
+      return errorResponse(
+        "Checkout isn't available yet. Our team has been notified — please try again shortly.",
+        503,
+      );
+    }
 
     console.info("[paddle-checkout] transaction created", {
       organization_id: tenantId,
       internal_plan: plan,
       billing_interval: billing,
+      transaction_id: transactionId,
+      surface: clientToken ? "overlay" : "hosted",
       result: "ok",
     });
 
     return jsonResponse({
+      transactionId,
+      clientToken,
+      environment,
       url,
       successUrl,
       cancelUrl,
@@ -168,6 +197,13 @@ Deno.serve(async (req) => {
     if (msg.includes("not configured for billing")) {
       return errorResponse("The selected Atlas plan is not configured for billing.", 422);
     }
+    if (msg.includes("PADDLE_API_KEY is not configured")) {
+      return errorResponse(
+        "Billing isn't configured for this environment yet. Please contact support.",
+        503,
+      );
+    }
     return errorResponse("We're unable to start checkout right now. Please try again.", 502);
   }
+
 });
