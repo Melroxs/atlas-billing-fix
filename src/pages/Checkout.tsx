@@ -35,6 +35,14 @@ interface CheckoutSession {
   transactionId?: string;
   clientToken?: string | null;
   environment?: "sandbox" | "live";
+  /**
+   * Paddle Retain identification. This is the Paddle-issued customer id
+   * (`ctm_...`) resolved server-side from the verified webhook's
+   * organization_subscriptions.provider_customer_id, validated against the
+   * active Paddle environment. Never an Atlas org id, Supabase user id or
+   * email. Null for a first-time subscriber.
+   */
+  paddleCustomerId?: string | null;
   url?: string | null;
   successUrl?: string;
   cancelUrl?: string;
