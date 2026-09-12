@@ -5,7 +5,7 @@
  * polls Atlas's server-side billing state (written by the verified Paddle
  * webhook) until the subscription appears. Possible outcomes:
  *   - "Activating your Atlas subscription…"  (webhook still in flight)
- *   - "Your Atlas trial is active."          (trialing / active confirmed)
+ *   - "Your Atlas subscription is active."     (active subscription confirmed)
  *   - "We couldn't confirm your subscription yet." (stalled / not active)
  *
  * This page is PUBLIC — it renders for both authenticated and unauthenticated
@@ -145,23 +145,20 @@ export default function PricingSuccess() {
             </div>
             <div className="space-y-2">
               <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-                {billing?.status === "trialing"
-                  ? "Your Atlas trial is active."
-                  : "Your Atlas subscription is active."}
+                Your Atlas subscription is active.
               </h1>
               <p className="text-muted-foreground leading-relaxed">
-                {billing?.status === "trialing"
-                  ? `You're on ${planDisplayName(billing?.plan)} (${billing?.billingInterval === "annual" ? "annual" : "monthly"} billing). Your trial ends ${
-                      formatDate(billing?.trialEnd) ?? "soon"
-                    } — then the plan's regular price applies.`
-                  : `You're on ${planDisplayName(billing?.plan)}. Everything is set up and ready to use.`}
+                You're on {planDisplayName(billing?.plan)} (
+                {billing?.billingInterval === "annual" ? "annual" : "monthly"} billing).
+                Everything is set up and ready to use.
               </p>
-              {billing?.trialEnd && (
-                <p className="text-xs text-muted-foreground">
-                  Next billing date: {formatDate(billing?.nextBilledAt ?? billing?.currentPeriodEnd) ?? "to be confirmed"}
-                </p>
-              )}
+              <p className="text-xs text-muted-foreground">
+                Next billing date:{" "}
+                {formatDate(billing?.nextBilledAt ?? billing?.currentPeriodEnd) ??
+                  "to be confirmed"}
+              </p>
             </div>
+
           </>
         ) : (
           <>
