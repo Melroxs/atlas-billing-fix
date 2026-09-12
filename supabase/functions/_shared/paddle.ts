@@ -388,6 +388,45 @@ export async function createPaddleTransaction(
   return { transactionId, url, priceId };
 }
 
+// ---------------------------------------------------------------------------
+// Paddle Retain — customer identification (pwCustomer)
+// ---------------------------------------------------------------------------
+
+/** True only for a real Paddle customer id (`ctm_...`). */
+export function isPaddleCustomerId(value: unknown): value is string {
+  return typeof value === "string" && /^ctm_[A-Za-z0-9]+$/.test(value);
+}
+
+/**
+ * Confirm a stored Paddle customer id belongs to the CURRENT Paddle
+ * environment before it is handed to Paddle.js as `pwCustomer.id`.
+ *
+ * Paddle customer ids are not environment-tagged, so a sandbox `ctm_...`
+ * persisted during testing would otherwise be sent to Retain in live mode.
+ * The check reads the customer through the environment's own API base with
+ * the environment's own API key: a sandbox id is a 404 in live (and vice
+ * versa), so a cross-environment id is dropped rather than used.
+ */
+export async function paddleCustomerExistsInEnvironment(
+  customerId: string,
+): Promise<boolean> {
+  if (!isPaddleCustomerId(customerId)) return false;
+  const apiKey = Deno.env.get("PADDLE_API_KEY") ?? "";
+  if (!apiKey) return false;
+  try {
+    const res = await fetch(
+      `${paddleApiBase()}/customers/${encodeURIComponent(customerId)}`,
+      { headers: { Authorization: `Bearer ${apiKey}` } },
+    );
+    return res.ok;
+  } catch (e) {
+    console.error("[paddle] customer environment check failed", {
+      detail: (e instanceof Error ? e.message : String(e)).slice(0, 200),
+    });
+    return false;
+  }
+}
+
 /**
  * Client-safe Paddle configuration for the browser overlay checkout.
  *

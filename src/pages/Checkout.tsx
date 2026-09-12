@@ -35,6 +35,14 @@ interface CheckoutSession {
   transactionId?: string;
   clientToken?: string | null;
   environment?: "sandbox" | "live";
+  /**
+   * Paddle Retain identification. This is the Paddle-issued customer id
+   * (`ctm_...`) resolved server-side from the verified webhook's
+   * organization_subscriptions.provider_customer_id, validated against the
+   * active Paddle environment. Never an Atlas org id, Supabase user id or
+   * email. Null for a first-time subscriber.
+   */
+  paddleCustomerId?: string | null;
   url?: string | null;
   successUrl?: string;
   cancelUrl?: string;
@@ -61,7 +69,15 @@ export default function Checkout() {
 
   const openPaddleCheckout = useCallback(
     async (session: CheckoutSession) => {
-      const { transactionId, clientToken, environment, url, successUrl } = session;
+      const { transactionId, clientToken, environment, url, successUrl, paddleCustomerId } =
+        session;
+
+      // Paddle Retain only accepts a Paddle-issued customer id. Anything else
+      // (org id, user id, email) is refused here as a second line of defence.
+      const retainCustomerId =
+        typeof paddleCustomerId === "string" && /^ctm_[A-Za-z0-9]+$/.test(paddleCustomerId)
+          ? paddleCustomerId
+          : null;
 
       // Preferred: Paddle.js overlay against the server-created transaction.
       if (clientToken && transactionId) {
@@ -70,6 +86,7 @@ export default function Checkout() {
           (await initializePaddle({
             token: clientToken,
             environment: environment === "live" ? "production" : "sandbox",
+            ...(retainCustomerId ? { pwCustomer: { id: retainCustomerId } } : {}),
             eventCallback: (event) => {
               if (event.name === "checkout.closed") {
                 // The customer cancelled: nothing is charged and no access is
