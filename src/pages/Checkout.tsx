@@ -69,7 +69,15 @@ export default function Checkout() {
 
   const openPaddleCheckout = useCallback(
     async (session: CheckoutSession) => {
-      const { transactionId, clientToken, environment, url, successUrl } = session;
+      const { transactionId, clientToken, environment, url, successUrl, paddleCustomerId } =
+        session;
+
+      // Paddle Retain only accepts a Paddle-issued customer id. Anything else
+      // (org id, user id, email) is refused here as a second line of defence.
+      const retainCustomerId =
+        typeof paddleCustomerId === "string" && /^ctm_[A-Za-z0-9]+$/.test(paddleCustomerId)
+          ? paddleCustomerId
+          : null;
 
       // Preferred: Paddle.js overlay against the server-created transaction.
       if (clientToken && transactionId) {
@@ -78,6 +86,7 @@ export default function Checkout() {
           (await initializePaddle({
             token: clientToken,
             environment: environment === "live" ? "production" : "sandbox",
+            ...(retainCustomerId ? { pwCustomer: { id: retainCustomerId } } : {}),
             eventCallback: (event) => {
               if (event.name === "checkout.closed") {
                 // The customer cancelled: nothing is charged and no access is
