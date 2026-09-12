@@ -12,8 +12,8 @@
 //     tenantId is only accepted when it matches the caller's membership.
 //   - PADDLE_API_KEY is read from Deno.env and never leaves this function.
 //
-// Flow: Pricing → Checkout page → this function → Paddle checkout ($10 /
-// 1-day trial is configured on the catalog price) → webhook → Atlas DB.
+// Flow: Pricing → Checkout page → this function → Paddle checkout (no trial;
+// the catalog price is charged immediately) → webhook → Atlas DB.
 // ---------------------------------------------------------------------------
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
