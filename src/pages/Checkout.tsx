@@ -8,8 +8,6 @@
  *   3. Calls paddle-checkout Edge Function with plan + billing + tenant_id
  *   4. Redirects to the Paddle hosted checkout URL
  *   5. After payment, the paddle-webhook synchronizes the subscription state
- *      (the $10 / 1-day trial is configured on the Paddle catalog price —
- *      Atlas never charges the trial itself)
  *   6. User is redirected back to /pricing-success, which confirms the state
  *
  * The browser never holds Paddle secrets: checkout URLs are created
@@ -144,7 +142,7 @@ export default function Checkout() {
             <p className="text-xs text-muted-foreground">
               {phase === "init"
                 ? "Creating your Atlas workspace and team ownership."
-                : "You'll be redirected to Paddle to complete your $10 / 1-day trial."}
+                : "You'll be redirected to Paddle to complete your subscription."}
             </p>
           </div>
         </div>

@@ -112,10 +112,10 @@ async function paddleFetch(
  * Create a Paddle transaction for the given plan/interval and return the
  * hosted checkout URL.
  *
- * Paddle is the billing source of truth: the $10 / 1-day trial and the
+ * Paddle is the billing source of truth: the
  * recurring price are configured on the catalog price, and Paddle creates the
  * subscription when the transaction completes. Atlas never charges the trial
- * itself and never starts its own trial timer.
+ * itself and never starts a trial.
  *
  * Custom data (flat string map) survives checkout → transaction →
  * subscription → webhook, which is how the webhook reconciles the

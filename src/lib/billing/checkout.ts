@@ -11,9 +11,8 @@
 //
 // The browser only ever receives a checkout URL it should open. Everything
 // that grants access happens in the webhook processor. Paddle is the billing
-// source of truth: the $10 / 1-day trial and the recurring price are
-// configured on the catalog price — Atlas never charges the trial itself and
-// never runs its own trial timer.
+// source of truth: the recurring price is configured on the catalog price —
+// Atlas never charges anything itself and never runs a trial.
 // ---------------------------------------------------------------------------
 
 import {

@@ -98,7 +98,7 @@ export interface BillingStorage {
  * Paddle Billing event types Atlas consumes.
  *
  * Only events Paddle actually emits are listed. `transaction.completed`
- * confirms the initial charge (including the $10 / 1-day trial) but the
+ * confirms the initial charge but the
  * subscription lifecycle events carry the state Atlas synchronizes;
  * transaction events are audited and otherwise informational.
  */
