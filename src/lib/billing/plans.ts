@@ -23,8 +23,8 @@ export const PLAN_METADATA = {
     description:
       "For small restoration teams getting started with AI workforce intelligence.",
     billingIntervalPrice: {
-      monthly: 49,
-      annual: 470,
+      monthly: 10,
+      annual: 100,
     },
   },
   ATLAS_GROWTH: {
@@ -33,8 +33,8 @@ export const PLAN_METADATA = {
     description:
       "For growing teams that need the full AI workforce across claims, supplements, estimating, recovery, project management, and customer success.",
     billingIntervalPrice: {
-      monthly: 149,
-      annual: 1430,
+      monthly: 40,
+      annual: 400,
     },
   },
   ATLAS_SCALE: {
@@ -43,8 +43,8 @@ export const PLAN_METADATA = {
     description:
       "For larger operations with heavier claim volume and multi-team workflows.",
     billingIntervalPrice: {
-      monthly: 299,
-      annual: 2870,
+      monthly: 120,
+      annual: 1200,
     },
   },
 } as const;
