@@ -21,11 +21,43 @@ import {
   CORS_HEADERS,
   createPaddleTransaction,
   paddleClientConfig,
+  paddleCustomerExistsInEnvironment,
+  isPaddleCustomerId,
   jsonResponse,
   errorResponse,
   type BillingInterval,
   type InternalPlan,
 } from "../_shared/paddle.ts";
+
+/**
+ * Resolve the organization's real Paddle customer id (`ctm_...`) for Paddle
+ * Retain (`pwCustomer`). The value originates from Paddle itself and is
+ * persisted by the verified paddle-webhook into
+ * organization_subscriptions.provider_customer_id — it is never an Atlas
+ * organization id, a Supabase user id or an email address. Returns null for
+ * a first-time subscriber (no Paddle customer exists yet) or when the stored
+ * id belongs to a different Paddle environment.
+ */
+async function resolvePaddleCustomerId(
+  organizationId: string,
+): Promise<string | null> {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  if (!supabaseUrl || !serviceKey) return null;
+
+  const admin = createClient(supabaseUrl, serviceKey, {
+    auth: { persistSession: false },
+  });
+  const { data } = await admin
+    .from("organization_subscriptions")
+    .select("provider_customer_id")
+    .eq("organization_id", organizationId)
+    .maybeSingle();
+
+  const stored = data?.provider_customer_id ?? null;
+  if (!isPaddleCustomerId(stored)) return null;
+  return (await paddleCustomerExistsInEnvironment(stored)) ? stored : null;
+}
 
 
 const ATLAS_APP_URL = Deno.env.get("ATLAS_APP_URL") ?? "https://atlas-ai-os.com";
