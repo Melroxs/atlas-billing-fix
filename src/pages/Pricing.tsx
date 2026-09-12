@@ -10,8 +10,9 @@ const PLANS = [
   {
     name: "Starter",
     description: "For small teams getting started with intelligence.",
-    monthlyPrice: 49,
-    annualPrice: 470, // ~$39/mo billed annually
+    monthlyPrice: 10,
+    annualPrice: 100, // 2 months free vs monthly
+
     features: [
       "Up to 5 team members",
       "10 GB document storage",
@@ -25,8 +26,9 @@ const PLANS = [
   {
     name: "Growth",
     description: "For growing teams that need full intelligence capabilities.",
-    monthlyPrice: 149,
-    annualPrice: 1430, // ~$119/mo billed annually
+    monthlyPrice: 40,
+    annualPrice: 400, // 2 months free vs monthly
+
     features: [
       "Up to 25 team members",
       "100 GB document storage",
@@ -42,8 +44,9 @@ const PLANS = [
   {
     name: "Scale",
     description: "For large organizations with heavier claim volume and multi-team workflows.",
-    monthlyPrice: 299,
-    annualPrice: 2870, // ~$239/mo billed annually
+    monthlyPrice: 120,
+    annualPrice: 1200, // 2 months free vs monthly
+
     features: [
       "Unlimited team members",
       "Unlimited document storage",
@@ -108,9 +111,10 @@ export default function Pricing() {
             Choose your plan
           </h1>
           <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-            Start with a plan that fits your team. Every plan starts with a
-            1-day trial for $10 — then your plan's regular price applies.
+            Start with a plan that fits your team. Billed monthly or annually —
+            cancel any time.
           </p>
+
 
           {/* Billing Toggle */}
           <div className="mt-8 inline-flex items-center gap-3 rounded-lg border border-border/60 bg-muted/30 p-1">
@@ -137,7 +141,7 @@ export default function Pricing() {
               )}
             >
               Annual
-              <span className="ml-1.5 text-xs text-emerald-600 dark:text-emerald-400">Save 20%</span>
+              <span className="ml-1.5 text-xs text-emerald-600 dark:text-emerald-400">2 months free</span>
             </button>
           </div>
         </div>
@@ -159,11 +163,8 @@ export default function Pricing() {
                   Most Popular
                 </div>
               )}
-              {plan.monthlyPrice !== null && (
-                <div className="absolute -top-3 right-4 rounded-full border border-teal-400/40 bg-teal-400/10 px-3 py-1 text-[11px] font-medium text-teal-700 dark:text-teal-300">
-                  $10 · 1-day trial
-                </div>
-              )}
+
+
 
               <div className="mb-6">
                 <h3 className="text-xl font-semibold text-foreground">{plan.name}</h3>
@@ -174,16 +175,18 @@ export default function Pricing() {
                 {plan.monthlyPrice !== null ? (
                   <div className="flex items-baseline gap-1">
                     <span className="text-4xl font-bold text-foreground">
-                      ${billing === "monthly" ? plan.monthlyPrice : Math.round(plan.annualPrice! / 12)}
+                      ${billing === "monthly" ? plan.monthlyPrice : plan.annualPrice}
                     </span>
-                    <span className="text-sm text-muted-foreground">/mo</span>
+                    <span className="text-sm text-muted-foreground">
+                      {billing === "monthly" ? "/mo" : "/yr"}
+                    </span>
                   </div>
                 ) : (
                   <div className="text-4xl font-bold text-foreground">Custom</div>
                 )}
                 {billing === "annual" && plan.annualPrice !== null && (
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Billed ${plan.annualPrice} annually
+                    Billed ${plan.annualPrice} once a year
                   </p>
                 )}
               </div>
@@ -199,10 +202,10 @@ export default function Pricing() {
 
               {plan.monthlyPrice !== null && (
                 <p className="mb-3 text-center text-xs text-muted-foreground">
-                  Start your 1-day trial for $10. After the trial, you'll be
-                  billed {billing === "monthly" ? `$${plan.monthlyPrice}/month` : `$${plan.annualPrice} annually`}.
+                  Billed {billing === "monthly" ? `$${plan.monthlyPrice}/month` : `$${plan.annualPrice}/year`} until you cancel.
                 </p>
               )}
+
 
               <Button
                 onClick={() => handleGetStarted(plan)}
@@ -248,17 +251,18 @@ export default function Pricing() {
               },
               {
                 q: "Is there a free trial?",
-                a: "No — every plan starts with a 1-day trial for $10. You're charged $10 at checkout, and the plan's regular price applies once the trial ends.",
+                a: "No. Atlas plans are paid from the start — you're charged the plan price you choose at checkout, and you can cancel any time.",
               },
               {
                 q: "What payment methods do you accept?",
                 a: "Payments are processed securely by Paddle. All major credit cards are supported, along with other local payment methods Paddle offers in your region.",
               },
               {
-                q: "What happens when my trial ends?",
-                a: "Your card is charged the plan's regular price on the billing interval you chose, and your subscription continues until you cancel. See the Refund Policy for details.",
+                q: "What happens if I cancel?",
+                a: "You keep access until the end of the period you've already paid for, and you're not billed again. See the Refund Policy for details.",
               },
             ].map((faq) => (
+
               <div key={faq.q} className="rounded-xl border border-border/60 bg-card/40 p-6">
                 <h3 className="font-semibold text-foreground">{faq.q}</h3>
                 <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{faq.a}</p>
