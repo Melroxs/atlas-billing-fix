@@ -401,7 +401,30 @@ export function paddleClientConfig(): {
   environment: PaddleEnvironment;
 } {
   const token = Deno.env.get("PADDLE_CLIENT_TOKEN") ?? "";
-  return { clientToken: token || null, environment: paddleEnvironment() };
+  const environment = paddleEnvironment();
+
+  // Environment/token mismatch guard. A sandbox client-side token (test_...)
+  // in a live deployment would open a checkout that can never take a real
+  // payment, and a live token (live_...) in sandbox would target the live
+  // catalog. Refuse the overlay in that case; the caller then falls back to
+  // the hosted checkout URL or reports that checkout is unavailable.
+  if (token) {
+    const isLiveToken = token.startsWith("live_");
+    if (environment === "live" && !isLiveToken) {
+      console.error(
+        "[paddle] PADDLE_CLIENT_TOKEN is not a live token while PADDLE_ENVIRONMENT=live; overlay checkout disabled.",
+      );
+      return { clientToken: null, environment };
+    }
+    if (environment === "sandbox" && isLiveToken) {
+      console.error(
+        "[paddle] PADDLE_CLIENT_TOKEN is a live token while PADDLE_ENVIRONMENT=sandbox; overlay checkout disabled.",
+      );
+      return { clientToken: null, environment };
+    }
+  }
+
+  return { clientToken: token || null, environment };
 }
 
 
