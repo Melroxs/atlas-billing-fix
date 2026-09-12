@@ -322,7 +322,8 @@ export async function createPaddleTransaction(
   organizationId: string,
   plan: InternalPlan,
   interval: BillingInterval,
-): Promise<{ transactionId: string; url: string }> {
+  returnUrl?: string,
+): Promise<{ transactionId: string; url: string | null; priceId: string }> {
   const apiKey = Deno.env.get("PADDLE_API_KEY") ?? "";
   if (!apiKey) {
     throw new Error("PADDLE_API_KEY is not configured.");
@@ -351,6 +352,12 @@ export async function createPaddleTransaction(
         atlas_internal_plan: plan,
         atlas_billing_interval: interval,
       },
+      // `checkout.url` is where Paddle returns the customer after payment.
+      // Paddle only fills in a hosted checkout URL when the seller has a
+      // default payment link configured; when it doesn't, Atlas opens the
+      // Paddle.js overlay with this transaction id instead, so a missing URL
+      // is never fatal.
+      ...(returnUrl ? { checkout: { url: returnUrl } } : {}),
     }),
   });
 
@@ -370,13 +377,33 @@ export async function createPaddleTransaction(
   const json = (await response.json()) as Record<string, unknown>;
   const data = (json.data as Record<string, unknown>) ?? json;
   const checkout = (data.checkout as Record<string, unknown>) ?? {};
-  const url = (checkout.url as string) ?? (data.url as string) ?? "";
+  const url =
+    (typeof checkout.url === "string" && checkout.url ? checkout.url : null) ??
+    (typeof data.url === "string" && data.url ? data.url : null);
 
-  if (!url) {
-    throw new Error("Paddle did not return a checkout URL for the transaction.");
+  const transactionId = typeof data.id === "string" ? data.id : "";
+  if (!transactionId) {
+    throw new Error("Paddle did not return a transaction id.");
   }
-  return { transactionId: (data.id as string) ?? "", url };
+  return { transactionId, url, priceId };
 }
+
+/**
+ * Client-safe Paddle configuration for the browser overlay checkout.
+ *
+ * PADDLE_CLIENT_TOKEN is a publishable client-side token (Paddle →
+ * Developer tools → Authentication → Client-side tokens). It is the ONLY
+ * Paddle value allowed to reach the browser; the API key and the webhook
+ * secret never leave the server.
+ */
+export function paddleClientConfig(): {
+  clientToken: string | null;
+  environment: PaddleEnvironment;
+} {
+  const token = Deno.env.get("PADDLE_CLIENT_TOKEN") ?? "";
+  return { clientToken: token || null, environment: paddleEnvironment() };
+}
+
 
 // ---------------------------------------------------------------------------
 // Webhook sender IP allowlist
